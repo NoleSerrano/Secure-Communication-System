@@ -16,6 +16,26 @@ public class SecureCommunicationSystem {
 				print("Invalid file path\n\n");
 			}
 		} while (!channel.exists());
+		
+		// creates appropriate folders if they do not exist
+		File transmittedDataFolder = new File(channel.getAbsolutePath() + "\\Transmitted Data");
+		try {
+			transmittedDataFolder.mkdir(); // creates Transmitted Data folder if doesn't exist
+		} catch (Exception e) {
+			print(e);
+		}
+		File publicKeysFolder = new File(channel.getAbsolutePath() + "\\Public Keys");
+		try {
+			publicKeysFolder.mkdir(); // creates Public Keys folder if doesn't exist
+		} catch (Exception e) {
+			print(e);
+		}
+		File privateKeysFolder = new File(channel.getAbsolutePath() + "\\Private Keys");
+		try {
+			privateKeysFolder.mkdir(); // creates Private Keys folder if doesn't exist
+		} catch (Exception e) {
+			print(e);
+		}
 		while (true) {
 			print("\n1) Generate a key pair\n2) Show public keys\n3) Show transmitted data\n4) Send a message\n5) Read a message\n6) Exit\nChoice: ");
 			int choice = sc.nextInt();
