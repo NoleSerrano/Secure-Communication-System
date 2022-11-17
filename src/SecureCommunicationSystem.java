@@ -1,6 +1,11 @@
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.*;
 import java.util.Arrays;
 import java.util.Base64;
@@ -131,11 +136,26 @@ public class SecureCommunicationSystem {
 		}
 	}
 
-	private static void showPublicKeys(Scanner sc, File publicKeysFolder) {
+	private static void showPublicKeys(Scanner sc, File publicKeysFolder) throws IOException {
 		// displays all public key files
+		File[] publicKeyFiles = publicKeysFolder.listFiles();
+		print("\n");
+		if (publicKeyFiles != null) {
+			for (File publicKeyFile : publicKeyFiles) {
+				print(publicKeyFile.getName() + "\n");
+			}
+			print("\n");
+			print("File name: "); // file name of specific public key
+			String fileName = sc.nextLine();
+			if (fileName.length() != 0) { // user didn't press enter
+				String publicKey = new String(
+						Files.readAllBytes(Paths.get(publicKeysFolder.getAbsoluteFile() + "\\" + fileName)),
+						StandardCharsets.UTF_8);
+				print("\n" + publicKey + "\n");
 
-		print("File name: "); // file name of specific public key
-		// shows the actual public key in the terminal
+			}
+		}
+
 	}
 
 	private static void showTransmittedData(Scanner sc) {
@@ -145,15 +165,15 @@ public class SecureCommunicationSystem {
 	private static void sendMessage(Scanner sc) {
 		print("Optional file name: "); // optional file name which will be appended with Date.now()
 		print("Message: "); // sender's message
-		print("Receiver's public key: "); // intended recipient's public key
-		print("Sender's private key: "); // private key of sender
+		print("Receiver's public key file: "); // intended recipient's public key
+		print("Sender's private key file: "); // private key of sender
 
 	}
 
 	private static void readMessage(Scanner sc) {
 		print("File name: "); // message receiver wants to read
-		print("Receiver's private key"); // private key of receiver
-		print("Sender's public key"); // public key of sender for verification
+		print("Receiver's private key file"); // private key of receiver
+		print("Sender's public key file"); // public key of sender for verification
 	}
 
 	private static void print(Object o) {
