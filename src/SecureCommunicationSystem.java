@@ -190,7 +190,7 @@ public class SecureCommunicationSystem {
 	}
 
 	private static void showTransmittedData(Scanner sc, File transmittedDataFolder) {
-		print("File keyword: "); // shows all messages that have the keyword
+		print("File name: "); // shows all messages that have the keyword
 	}
 
 	private static void sendMessage(Scanner sc, File publicKeysFolder, File privateKeysFolder,
