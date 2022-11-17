@@ -21,7 +21,7 @@ public class SecureCommunicationSystem {
 //		System.out.println(new Date().getTime());
 		String username = System.getProperty("user.name");
 		File channel = new File("C:\\Users\\" + username + "\\Documents\\Secure Communication System"); // Windows file
-																											// structure
+																										// structure
 		try {
 			channel.mkdir(); // creates Secure Communication Channel folder if doesn't exist
 		} catch (Exception e) {
@@ -89,14 +89,26 @@ public class SecureCommunicationSystem {
 		return formatted;
 	}
 
+	private static String formatPublicKey(String publicKeyString) {
+		return "-----BEGIN RSA PUBLIC KEY-----\n" + formatLongString(publicKeyString)
+				+ "\n-----END RSA PUBLIC KEY-----";
+	}
+
+	private static String formatPrivateKey(String privateKeyString) {
+		return "-----BEGIN RSA PRIVATE KEY-----\n" + formatLongString(privateKeyString)
+				+ "\n-----END RSA PRIVATE KEY-----";
+	}
+
 	private static void generateKeyPair(Scanner sc, File channel)
 			throws NoSuchAlgorithmException, IOException, NoSuchProviderException {
 		// generates RSA public and private key
 		// public and private key are shown to user and stored in appropriate folders
-		// file name of both public and private key are the same and use Date.now()
 
-		print("\nOptional file name: "); // optional file name which will be appended with Date.now()
+		print("\nOptional file name: "); // optional file name otherwise will just use date as file name
 		String optionalFileName = sc.nextLine();
+		if (optionalFileName.length() == 0) { // default ENTER, get time for file name
+			optionalFileName = new Date().getTime() + "";
+		}
 		KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA"); // class to generate keys
 		SecureRandom secureRandom = SecureRandom.getInstance("SHA1PRNG"); // for randomness
 		byte[] bytes = new byte[20];
@@ -107,14 +119,11 @@ public class SecureCommunicationSystem {
 		Key privateKey = keyPair.getPrivate(); // private RSA key
 		Base64.Encoder encoder = Base64.getEncoder(); // used for encoding the RSA key into text
 
-		String publicKeyText = "-----BEGIN RSA PUBLIC KEY-----\n"
-				+ formatLongString(encoder.encodeToString(publicKey.getEncoded())) + "\n-----END RSA PUBLIC KEY-----";
-		String privateKeyText = "-----BEGIN RSA PRIVATE KEY-----\n"
-				+ formatLongString(encoder.encodeToString(privateKey.getEncoded())) + "\n-----END RSA PRIVATE KEY-----";
+		String publicKeyString = encoder.encodeToString(publicKey.getEncoded());
+		String privateKeyString = encoder.encodeToString(privateKey.getEncoded());
+		String publicKeyFormatted = formatPublicKey(publicKeyString);
+		String privateKeyFormatted = formatPrivateKey(privateKeyString);
 
-		if (optionalFileName.length() == 0) { // default ENTER, get time for file name
-			optionalFileName = new Date().getTime() + "";
-		}
 		FileWriter fileWriter = null;
 
 		if (optionalFileName.length() > 0) {
@@ -133,10 +142,10 @@ public class SecureCommunicationSystem {
 				}
 			}
 			fileWriter = new FileWriter(publicKeyFile);
-			fileWriter.write(publicKeyText); // writes the public key into the file
+			fileWriter.write(publicKeyString); // writes the public key into the file
 			fileWriter.close();
 			print("\n" + publicKeyFile.getAbsolutePath());
-			print("\n" + publicKeyText + "\n");
+			print("\n" + publicKeyFormatted + "\n");
 
 			File privateKeyFile;
 			if (i == 0) {
@@ -146,18 +155,19 @@ public class SecureCommunicationSystem {
 						channel.getAbsoluteFile() + "\\Private Keys\\" + optionalFileName + " (" + i + ").txt");
 			}
 			fileWriter = new FileWriter(privateKeyFile);
-			fileWriter.write(privateKeyText); // writes the private key into the file (note that no user should be able
+			fileWriter.write(privateKeyString); // writes the private key into the file (note that no user should be
+												// able
 												// to read the private keys, this is just for testing sake)
 			fileWriter.close();
 			print("\n" + privateKeyFile.getAbsolutePath());
-			print("\n" + privateKeyText + "\n");
+			print("\n" + privateKeyFormatted + "\n");
 		}
 	}
 
 	private static void showPublicKeys(Scanner sc, File publicKeysFolder) throws IOException {
 		// displays all public key files
 		File[] publicKeyFiles = publicKeysFolder.listFiles();
-		
+
 		if (publicKeyFiles.length != 0) {
 			print("\n");
 			for (File publicKeyFile : publicKeyFiles) {
@@ -167,10 +177,10 @@ public class SecureCommunicationSystem {
 			print("File name: "); // file name of specific public key
 			String fileName = sc.nextLine() + ".txt";
 			if (fileName.length() != 0) { // user didn't press enter
-				String publicKey = new String(
+				String publicKeyString = new String(
 						Files.readAllBytes(Paths.get(publicKeysFolder.getAbsoluteFile() + "\\" + fileName)),
 						StandardCharsets.UTF_8);
-				print("\n" + publicKey + "\n");
+				print("\n" + formatPublicKey(publicKeyString) + "\n");
 
 			}
 		}
@@ -182,16 +192,26 @@ public class SecureCommunicationSystem {
 	}
 
 	private static void sendMessage(Scanner sc) {
-		print("Optional file name: "); // optional file name which will be appended with Date.now()
+		print("Optional file name: "); // optional file name otherwise will just use the date as file name
+		String optionalFileName = sc.nextLine();
+		if (optionalFileName.length() == 0) { // default ENTER, get time for file name
+			optionalFileName = new Date().getTime() + "";
+		}
+
 		print("Message: "); // sender's message
+		String message = sc.nextLine(); // send empty messages?
+
 		print("Receiver's public key file: "); // intended recipient's public key
-		print("Sender's private key file: "); // private key of sender
+		String receiversPublicKeyFile = sc.nextLine();
+
+		print("Your private key file: "); // private key of sender
+		String sendersPrivateKeyFile = sc.nextLine();
 
 	}
 
 	private static void readMessage(Scanner sc) {
 		print("File name: "); // message receiver wants to read
-		print("Receiver's private key file"); // private key of receiver
+		print("Your private key file"); // private key of receiver
 		print("Sender's public key file"); // public key of sender for verification
 	}
 
