@@ -203,7 +203,7 @@ public class SecureCommunicationSystem {
 
 		File transmittedData = new File(transmittedDataFolder.getAbsolutePath() + "\\" + optionalFileName);
 		if (!transmittedData.mkdir()) {
-			int i = 0;
+			int i = 1;
 			while (true) {
 				transmittedData = new File(
 						transmittedDataFolder.getAbsolutePath() + "\\" + optionalFileName + " (" + i + ")");
