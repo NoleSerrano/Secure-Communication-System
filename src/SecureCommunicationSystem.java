@@ -256,7 +256,7 @@ public class SecureCommunicationSystem {
 		SecretKey aesKey = generateAESKey(); // generate AES key for message
 		String encryptedMessage = encrypt(messageString, aesKey); // encrypted message using AES key
 		String encryptedAesKey = encrypt(aesKey.toString(), receiversPublicKeyFile, true, "RSA"); // encrypted AES key
-
+		String macResult = generateMAC(messageString, sendersPrivateKeyFile, false, "RSA"); // mac
 	}
 
 	private static void readMessage(Scanner sc) {
@@ -276,12 +276,13 @@ public class SecureCommunicationSystem {
 		return aesKey;
 	}
 
-	private static byte[] generateMAC(byte[] messageBytes, Key key)
-			throws NoSuchAlgorithmException, InvalidKeyException {
+	private static String generateMAC(String messageString, File keyFile, boolean isPublicKey, String algorithm)
+			throws NoSuchAlgorithmException, InvalidKeyException, InvalidKeySpecException, IOException {
 		Mac mac = Mac.getInstance("HmacSHA256"); // SHA 256 algorithm
+		Key key = loadKey(keyFile, isPublicKey, algorithm);
 		mac.init(key); // init mac with key
-		byte[] macResult = mac.doFinal(messageBytes); // result of mac
-		return macResult;
+		byte[] macResult = mac.doFinal(decode(messageString)); // result of mac
+		return encode(macResult);
 	}
 
 	// encrypt with AES
