@@ -64,7 +64,7 @@ public class SecureCommunicationSystem {
 				showTransmittedData(sc, transmittedDataFolder);
 				break;
 			case 4: // send a message
-				sendMessage(sc);
+				sendMessage(sc, transmittedDataFolder);
 				break;
 			case 5: // read a message
 				readMessage(sc);
@@ -104,7 +104,7 @@ public class SecureCommunicationSystem {
 		// generates RSA public and private key
 		// public and private key are shown to user and stored in appropriate folders
 
-		print("\nOptional file name: "); // optional file name otherwise will just use date as file name
+		print("Optional file name: "); // optional file name otherwise will just use date as file name
 		String optionalFileName = sc.nextLine();
 		if (optionalFileName.length() == 0) { // default ENTER, get time for file name
 			optionalFileName = new Date().getTime() + "";
@@ -144,7 +144,7 @@ public class SecureCommunicationSystem {
 			fileWriter = new FileWriter(publicKeyFile);
 			fileWriter.write(publicKeyString); // writes the public key into the file
 			fileWriter.close();
-			print("\n" + publicKeyFile.getAbsolutePath());
+			print(publicKeyFile.getAbsolutePath());
 			print("\n" + publicKeyFormatted + "\n");
 
 			File privateKeyFile;
@@ -159,7 +159,7 @@ public class SecureCommunicationSystem {
 												// able
 												// to read the private keys, this is just for testing sake)
 			fileWriter.close();
-			print("\n" + privateKeyFile.getAbsolutePath());
+			print(privateKeyFile.getAbsolutePath());
 			print("\n" + privateKeyFormatted + "\n");
 		}
 	}
@@ -169,18 +169,18 @@ public class SecureCommunicationSystem {
 		File[] publicKeyFiles = publicKeysFolder.listFiles();
 
 		if (publicKeyFiles.length != 0) {
-			print("\n");
+			print("-----BEGIN PUBLIC KEYS-----\n");
 			for (File publicKeyFile : publicKeyFiles) {
 				print(publicKeyFile.getName().substring(0, publicKeyFile.getName().length() - 4) + "\n");
 			}
-			print("\n");
+			print("-----END PUBLIC KEYS-----\n");
 			print("File name: "); // file name of specific public key
 			String fileName = sc.nextLine() + ".txt";
 			if (fileName.length() != 0) { // user didn't press enter
 				String publicKeyString = new String(
 						Files.readAllBytes(Paths.get(publicKeysFolder.getAbsoluteFile() + "\\" + fileName)),
 						StandardCharsets.UTF_8);
-				print("\n" + formatPublicKey(publicKeyString) + "\n");
+				print(formatPublicKey(publicKeyString) + "\n");
 
 			}
 		}
@@ -191,13 +191,29 @@ public class SecureCommunicationSystem {
 		print("File keyword: "); // shows all messages that have the keyword
 	}
 
-	private static void sendMessage(Scanner sc) {
+	private static void sendMessage(Scanner sc, File transmittedDataFolder) {
+		// encrypt message (encrypted first with AES key and then with PU key)
+		// generate AES key
+		// generate MAC
 		print("Optional file name: "); // optional file name otherwise will just use the date as file name
 		String optionalFileName = sc.nextLine();
 		if (optionalFileName.length() == 0) { // default ENTER, get time for file name
 			optionalFileName = new Date().getTime() + "";
 		}
 
+		File transmittedData = new File(transmittedDataFolder.getAbsolutePath() + "\\" + optionalFileName);
+		if (!transmittedData.mkdir()) {
+			int i = 0;
+			while (true) {
+				transmittedData = new File(
+						transmittedDataFolder.getAbsolutePath() + "\\" + optionalFileName + " (" + i + ")");
+				if (transmittedData.mkdir()) {
+					break;
+				} else {
+					i++;
+				}
+			}
+		}
 		print("Message: "); // sender's message
 		String message = sc.nextLine(); // send empty messages?
 
