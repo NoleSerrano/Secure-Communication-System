@@ -1,16 +1,17 @@
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.security.*;
-import java.util.Arrays;
+import java.security.Key;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Date;
-import java.util.Random;
 import java.util.Scanner;
 
 public class SecureCommunicationSystem {
@@ -18,15 +19,14 @@ public class SecureCommunicationSystem {
 	public static void main(String[] args) throws IOException, NoSuchAlgorithmException, NoSuchProviderException {
 		Scanner sc = new Scanner(System.in);
 //		System.out.println(new Date().getTime());
-		File channel;
-		do {
-			print("Secure Communication Channel: "); // file path to Public Keys and Transmitted Data
-			String channelFilePath = sc.nextLine();
-			channel = new File(channelFilePath);
-			if (!channel.exists()) {
-				print("Invalid file path\n\n");
-			}
-		} while (!channel.exists());
+		String username = System.getProperty("user.name");
+		File channel = new File("C:\\Users\\" + username + "\\Documents\\Secure Communication System"); // Windows file
+																											// structure
+		try {
+			channel.mkdir(); // creates Secure Communication Channel folder if doesn't exist
+		} catch (Exception e) {
+			print(e);
+		}
 
 		// creates appropriate folders if they do not exist
 		File transmittedDataFolder = new File(channel.getAbsolutePath() + "\\Transmitted Data");
@@ -61,7 +61,7 @@ public class SecureCommunicationSystem {
 				showPublicKeys(sc, publicKeysFolder);
 				break;
 			case 3: // show transmitted data
-				showTransmittedData(sc);
+				showTransmittedData(sc, transmittedDataFolder);
 				break;
 			case 4: // send a message
 				sendMessage(sc);
@@ -95,13 +95,12 @@ public class SecureCommunicationSystem {
 		// public and private key are shown to user and stored in appropriate folders
 		// file name of both public and private key are the same and use Date.now()
 
-		print("Optional file name: "); // optional file name which will be appended with Date.now()
+		print("\nOptional file name: "); // optional file name which will be appended with Date.now()
 		String optionalFileName = sc.nextLine();
 		KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA"); // class to generate keys
 		SecureRandom secureRandom = SecureRandom.getInstance("SHA1PRNG"); // for randomness
 		byte[] bytes = new byte[20];
 		secureRandom.nextBytes(bytes);
-		print("\n" + secureRandom + "\n");
 		keyPairGenerator.initialize(1024, secureRandom); // RSA key pair generator will now generate 1024 bit key size
 		KeyPair keyPair = keyPairGenerator.generateKeyPair(); // generates the public and private RSA keys
 		Key publicKey = keyPair.getPublic(); // public RSA key
@@ -120,13 +119,32 @@ public class SecureCommunicationSystem {
 
 		if (optionalFileName.length() > 0) {
 			File publicKeyFile = new File(channel.getAbsoluteFile() + "\\Public Keys\\" + optionalFileName + ".txt");
+			int i = 0;
+			if (!publicKeyFile.createNewFile()) {
+				i = 1;
+				while (true) { // looks for a file name until one doesn't exist
+					publicKeyFile = new File(
+							channel.getAbsoluteFile() + "\\Public Keys\\" + optionalFileName + " (" + i + ").txt");
+					if (publicKeyFile.createNewFile()) {
+						break;
+					} else {
+						i++;
+					}
+				}
+			}
 			fileWriter = new FileWriter(publicKeyFile);
 			fileWriter.write(publicKeyText); // writes the public key into the file
 			fileWriter.close();
 			print("\n" + publicKeyFile.getAbsolutePath());
 			print("\n" + publicKeyText + "\n");
 
-			File privateKeyFile = new File(channel.getAbsoluteFile() + "\\Private Keys\\" + optionalFileName + ".txt");
+			File privateKeyFile;
+			if (i == 0) {
+				privateKeyFile = new File(channel.getAbsoluteFile() + "\\Private Keys\\" + optionalFileName + ".txt");
+			} else {
+				privateKeyFile = new File(
+						channel.getAbsoluteFile() + "\\Private Keys\\" + optionalFileName + " (" + i + ").txt");
+			}
 			fileWriter = new FileWriter(privateKeyFile);
 			fileWriter.write(privateKeyText); // writes the private key into the file (note that no user should be able
 												// to read the private keys, this is just for testing sake)
@@ -139,14 +157,15 @@ public class SecureCommunicationSystem {
 	private static void showPublicKeys(Scanner sc, File publicKeysFolder) throws IOException {
 		// displays all public key files
 		File[] publicKeyFiles = publicKeysFolder.listFiles();
-		print("\n");
-		if (publicKeyFiles != null) {
+		
+		if (publicKeyFiles.length != 0) {
+			print("\n");
 			for (File publicKeyFile : publicKeyFiles) {
-				print(publicKeyFile.getName() + "\n");
+				print(publicKeyFile.getName().substring(0, publicKeyFile.getName().length() - 4) + "\n");
 			}
 			print("\n");
 			print("File name: "); // file name of specific public key
-			String fileName = sc.nextLine();
+			String fileName = sc.nextLine() + ".txt";
 			if (fileName.length() != 0) { // user didn't press enter
 				String publicKey = new String(
 						Files.readAllBytes(Paths.get(publicKeysFolder.getAbsoluteFile() + "\\" + fileName)),
@@ -158,7 +177,7 @@ public class SecureCommunicationSystem {
 
 	}
 
-	private static void showTransmittedData(Scanner sc) {
+	private static void showTransmittedData(Scanner sc, File transmittedDataFolder) {
 		print("File keyword: "); // shows all messages that have the keyword
 	}
 
