@@ -1,6 +1,4 @@
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -22,6 +20,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Scanner;
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -29,11 +28,7 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
-import java.util.Base64;
 
 public class SecureCommunicationSystem {
 
@@ -42,10 +37,10 @@ public class SecureCommunicationSystem {
 
 	public static void main(String[] args) throws Exception {
 		Scanner sc = new Scanner(System.in);
-//		System.out.println(new Date().getTime());
-		String username = System.getProperty("user.name");
-		File channel = new File("C:\\Users\\" + username + "\\Documents\\Secure Communication System"); // Windows file
-																										// structure
+		String home = System.getProperty("user.home");
+
+		File channel = new File(home + "\\Documents\\Secure Communication System"); // Windows file
+																					// structure
 		try {
 			channel.mkdir(); // creates Secure Communication Channel folder if doesn't exist
 		} catch (Exception e) {
@@ -198,13 +193,13 @@ public class SecureCommunicationSystem {
 			}
 			print("-----END PUBLIC KEYS-----\n");
 			print("File name: "); // file name of specific public key
-			String fileName = sc.nextLine() + ".txt";
+			String fileName = sc.nextLine();
 			if (fileName.length() != 0) { // user didn't press enter
+				fileName += ".txt";
 				String publicKeyString = new String(
 						Files.readAllBytes(Paths.get(publicKeysFolder.getAbsoluteFile() + "\\" + fileName)),
 						StandardCharsets.UTF_8);
 				print(formatPublicKey(publicKeyString) + "\n");
-
 			}
 		}
 
@@ -254,9 +249,33 @@ public class SecureCommunicationSystem {
 				privateKeysFolder.getAbsoluteFile() + "\\" + sendersPrivateKeyFileName + ".txt");
 
 		SecretKey aesKey = generateAESKey(); // generate AES key for message
+		print("AES Key: " + secretKeyToString(aesKey) + "\n"); // DEBUG
 		String encryptedMessage = encrypt(messageString, aesKey); // encrypted message using AES key
-		String encryptedAesKey = encrypt(aesKey.toString(), receiversPublicKeyFile, true, "RSA"); // encrypted AES key
+		print("Encrypted Message: " + encryptedMessage + "\n"); // DEBUG
+		String encryptedAesKey = encrypt(secretKeyToString(aesKey), receiversPublicKeyFile, true, "RSA"); // encrypted
+																											// AES key
+		print("Encrypted AES Key: " + encryptedAesKey + "\n"); // DEBUG
 		String macResult = generateMAC(messageString, sendersPrivateKeyFile, false, "RSA"); // mac
+		print("MAC Result" + macResult + "\n"); // DEBUG
+
+		// display info to user
+		print("-----BEGIN ENCRYPTED MESSAGE-----\n");
+		print(formatLongString(encryptedMessage) + "\n");
+		print("-----END ENCRYPTED MESSAGE-----\n");
+
+		print("-----BEGIN ENCRYPTED AES KEY-----\n");
+		print(formatLongString(encryptedAesKey) + "\n");
+		print("-----END ENCRYPTED AES KEY-----\n");
+
+		print("-----BEGIN MAC RESULT-----\n");
+		print(formatLongString(macResult) + "\n");
+		print("-----END MAC RESULT-----\n");
+	}
+
+	public static String secretKeyToString(SecretKey secretKey) throws NoSuchAlgorithmException {
+		byte[] rawData = secretKey.getEncoded();
+		String encodedKey = Base64.getEncoder().encodeToString(rawData);
+		return encodedKey;
 	}
 
 	private static void readMessage(Scanner sc) {
@@ -327,7 +346,7 @@ public class SecureCommunicationSystem {
 
 	private static Key loadKey(File keyFile, boolean isPublicKey, String algorithm)
 			throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-		byte[] keyBytes = SecureCommunicationSystem.class.getResourceAsStream(keyFile.getAbsolutePath()).readAllBytes();
+		byte[] keyBytes = decode(Files.readString(Paths.get(keyFile.getAbsolutePath())));
 		KeyFactory keyFactory = KeyFactory.getInstance(algorithm);
 		EncodedKeySpec keySpec = new X509EncodedKeySpec(keyBytes);
 		if (isPublicKey) {
