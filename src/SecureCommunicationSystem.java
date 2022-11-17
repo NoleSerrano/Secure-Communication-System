@@ -1,4 +1,6 @@
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -64,7 +66,7 @@ public class SecureCommunicationSystem {
 				showTransmittedData(sc, transmittedDataFolder);
 				break;
 			case 4: // send a message
-				sendMessage(sc, transmittedDataFolder);
+				sendMessage(sc, publicKeysFolder, privateKeysFolder, transmittedDataFolder);
 				break;
 			case 5: // read a message
 				readMessage(sc);
@@ -191,7 +193,8 @@ public class SecureCommunicationSystem {
 		print("File keyword: "); // shows all messages that have the keyword
 	}
 
-	private static void sendMessage(Scanner sc, File transmittedDataFolder) {
+	private static void sendMessage(Scanner sc, File publicKeysFolder, File privateKeysFolder,
+			File transmittedDataFolder) throws FileNotFoundException {
 		// encrypt message (encrypted first with AES key and then with PU key)
 		// generate AES key
 		// generate MAC
@@ -217,11 +220,19 @@ public class SecureCommunicationSystem {
 		print("Message: "); // sender's message
 		String message = sc.nextLine(); // send empty messages?
 
+		Base64.Decoder decoder = Base64.getDecoder();
+		FileReader fileReader;
+		
 		print("Receiver's public key file: "); // intended recipient's public key
-		String receiversPublicKeyFile = sc.nextLine();
-
+		String receiversPublicKeyFileName = sc.nextLine();
+		File receiversPublicKeyFile = new File(
+				publicKeysFolder.getAbsolutePath() + "\\" + receiversPublicKeyFileName + ".txt");
+		fileReader = new FileReader(receiversPublicKeyFile.getAbsolutePath());
+		
 		print("Your private key file: "); // private key of sender
-		String sendersPrivateKeyFile = sc.nextLine();
+		String sendersPrivateKeyFileName = sc.nextLine();
+		File sendersPrivateKeyFile = new File(
+				privateKeysFolder.getAbsoluteFile() + "\\" + sendersPrivateKeyFileName + ".txt");
 
 	}
 
