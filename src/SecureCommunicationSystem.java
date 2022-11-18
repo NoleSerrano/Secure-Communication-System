@@ -1,6 +1,7 @@
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -245,8 +246,7 @@ public class SecureCommunicationSystem {
 		}
 		print("Message file: "); // sender's message
 		File messageFile = new File(sc.nextLine());
-		byte[] messageBytes = Files.readAllBytes(Paths.get(messageFile.getAbsolutePath()));
-		String messageString = encode(messageBytes);
+		String messageString = Files.readString(Paths.get(messageFile.getAbsolutePath()));
 
 		print("Receiver's public key file: "); // intended recipient's public key
 		String receiversPublicKeyFileName = sc.nextLine();
@@ -283,12 +283,19 @@ public class SecureCommunicationSystem {
 
 		print("Original Message:       " + messageString + "\n");
 		print("Encrypted Message:      " + encryptedMessage + "\n");
-		print("Decrypted Message:      " + decryptAES(encryptedMessage, aesKey) + "\n\n");
+		print("Decrypted Message:      " + (decryptAES(encryptedMessage, aesKey)) + "\n");
+		byte[] decoded = Base64.getDecoder().decode((decryptAES(encryptedMessage, aesKey)));
+		print("Decoded Message:        " + new String(decoded, "UTF-8") + "\n\n");
+		// decryptAES(encryptedMessage, aesKey).getBytes("UTF-8")
 
 		print("AES Key:                " + encode(aesKey.getEncoded()) + "\n");
 		print("Encrypted AES Key:      " + encryptedAesKey + "\n");
-		print("Decrypted AES Key:      " + decryptRSA(encryptedAesKey, receiversPrivateKeyFile, false) + "\n\n");
-		
+		print("Decrypted AES Key:      "
+				+ new String(decryptRSA(encryptedAesKey, receiversPrivateKeyFile, false).getBytes("UTF-8"), "UTF-8")
+				+ "\n\n");
+
+		// decryptRSA(encryptedAesKey, receiversPrivateKeyFile, false)
+
 		print("MAC Result:             " + macResult + "\n\n");
 		// DEBUG STATEMENTS END
 
