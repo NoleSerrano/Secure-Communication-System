@@ -284,19 +284,18 @@ public class SecureCommunicationSystem {
 		print("Original Message:       " + messageString + "\n");
 		print("Encrypted Message:      " + encryptedMessage + "\n");
 		print("Decrypted Message:      " + (decryptAES(encryptedMessage, aesKey)) + "\n");
-		byte[] decoded = Base64.getDecoder().decode((decryptAES(encryptedMessage, aesKey)));
-		print("Decoded Message:        " + new String(decoded, "UTF-8") + "\n\n");
+		print("Decoded Message:        " + decodeBase64String(decryptAES(encryptedMessage, aesKey)) + "\n\n");
 		// decryptAES(encryptedMessage, aesKey).getBytes("UTF-8")
 
 		print("AES Key:                " + encode(aesKey.getEncoded()) + "\n");
 		print("Encrypted AES Key:      " + encryptedAesKey + "\n");
-		print("Decrypted AES Key:      "
-				+ new String(decryptRSA(encryptedAesKey, receiversPrivateKeyFile, false).getBytes("UTF-8"), "UTF-8")
-				+ "\n\n");
-
+		print("Decrypted AES Key:      " + decryptRSA(encryptedAesKey, receiversPrivateKeyFile, false) + "\n");
+		print("Decoded AES Key:        "
+				+ decodeBase64String(decryptRSA(encryptedAesKey, receiversPrivateKeyFile, false)) + "\n\n");
 		// decryptRSA(encryptedAesKey, receiversPrivateKeyFile, false)
 
 		print("MAC Result:             " + macResult + "\n\n");
+		print("Verify MAC:             ");
 		// DEBUG STATEMENTS END
 
 		// display info to user
@@ -413,6 +412,11 @@ public class SecureCommunicationSystem {
 
 	private static byte[] decode(String data) {
 		return Base64.getDecoder().decode(data);
+	}
+
+	private static String decodeBase64String(String s) throws UnsupportedEncodingException {
+		byte[] decoded = Base64.getDecoder().decode(s);
+		return new String(decoded, "UTF-8");
 	}
 
 }
