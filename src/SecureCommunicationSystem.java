@@ -71,6 +71,8 @@ public class SecureCommunicationSystem {
 		} catch (Exception e) {
 			print(e);
 		}
+
+		print("Secure Communication System\n");
 		while (true) {
 			print("\n1) Generate a key pair\n2) Show public keys\n3) Show transmitted data\n4) Send a message\n5) Read a message\n6) Exit\nChoice: ");
 			int choice = sc.nextInt();
@@ -241,7 +243,7 @@ public class SecureCommunicationSystem {
 		print("Message file: "); // sender's message
 		File messageFile = new File(sc.nextLine());
 		byte[] messageBytes = Files.readAllBytes(Paths.get(messageFile.getAbsolutePath()));
-		String messageString = messageBytes.toString();
+		String messageString = encode(messageBytes);
 
 		print("Receiver's public key file: "); // intended recipient's public key
 		String receiversPublicKeyFileName = sc.nextLine();
@@ -264,16 +266,23 @@ public class SecureCommunicationSystem {
 		String macResult = encryptRSA(encryptedMessage, sendersPrivateKeyFile, false, "RSA"); // mac
 
 		// DEBUG STATEMENTS START
-		print("AES Key: " + secretKeyToString(aesKey) + "\n");
-		print("Encrypted Message: " + encryptedMessage + "\n");
-		print("Encrypted AES Key: " + encryptedAesKey + "\n");
-		print("MAC Result: " + macResult + "\n");
+		print("Message: " + messageString + "\n");
 		File sendersPublicKeyFile = new File(
 				publicKeysFolder.getAbsolutePath() + "\\" + sendersPrivateKeyFileName + ".txt");
 		File receiversPrivateKeyFile = new File(
 				privateKeysFolder.getAbsoluteFile() + "\\" + receiversPublicKeyFileName + ".txt");
-		print("Verified: " + decryptRSA(macResult, sendersPublicKeyFile, true, "RSA"));
-		print("Decrypted Message: " + decryptRSA(encryptedMessage, receiversPrivateKeyFile, false, "RSA"));
+		print("Receiver's Public Key: " + Files.readString(Paths.get(receiversPublicKeyFile.getAbsolutePath())) + "\n");
+		print("Receiver's Private Key: " + Files.readString(Paths.get(receiversPrivateKeyFile.getAbsolutePath()))
+				+ "\n");
+		print("Sneder's Public Key: " + Files.readString(Paths.get(sendersPublicKeyFile.getAbsolutePath())) + "\n");
+		print("Sender's Private Key: " + Files.readString(Paths.get(sendersPrivateKeyFile.getAbsolutePath())) + "\n");
+		print("AES Key: " + secretKeyToString(aesKey) + "\n");
+		print("Encrypted Message: " + encryptedMessage + "\n");
+		print("Encrypted AES Key: " + encryptedAesKey + "\n");
+		print("MAC Result: " + macResult + "\n");
+		print("Verified: " + decryptRSA(macResult, sendersPublicKeyFile, true, "RSA") + "\n");
+		print("Decrypted AES Key: " + decryptRSA(encryptedAesKey, receiversPrivateKeyFile, false, "RSA") + "\n");
+		print("Decrypted Message: " + decryptAES(encryptedMessage, aesKey) + "\n");
 		// DEBUG STATEMENTS END
 
 		// display info to user
