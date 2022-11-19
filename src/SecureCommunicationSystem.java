@@ -13,10 +13,8 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
-import java.security.Provider;
 import java.security.PublicKey;
 import java.security.SecureRandom;
-import java.security.Security;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -216,8 +214,46 @@ public class SecureCommunicationSystem {
 
 	}
 
-	private static void showTransmittedData(Scanner sc, File transmittedDataFolder) {
-		print("File name: "); // shows all messages that have the keyword
+	private static void showTransmittedData(Scanner sc, File transmittedDataFolder) throws IOException {
+		File[] transmittedDataFiles = transmittedDataFolder.listFiles();
+
+		if (transmittedDataFiles.length != 0) {
+			print("-----BEGIN TRANSMITTED DATA-----\n");
+			for (File transmittedDataFile : transmittedDataFiles) {
+				print(transmittedDataFile.getName().substring(0, transmittedDataFile.getName().length() - 4) + "\n");
+			}
+			print("-----END TRANSMITTED DATA-----\n");
+			print("File name: "); // file name of specific transmitted data
+			String fileName = sc.nextLine();
+			if (fileName.length() != 0) { // user didn't press enter
+				fileName += ".txt";
+				String transmittedDataString = new String(
+						Files.readAllBytes(Paths.get(transmittedDataFolder.getAbsoluteFile() + "\\" + fileName)),
+						StandardCharsets.UTF_8);
+				print(formatTransmittedData(transmittedDataString) + "\n");
+			}
+		}
+	}
+
+	private static String formatTransmittedData(String s) {
+		String[] data = s.split("\n");
+		String formatted = "";
+		// encrypted message
+		formatted += ("-----BEGIN ENCRYPTED MESSAGE-----\n");
+		formatted += (formatLongString(data[0]) + "\n");
+		formatted += ("-----END ENCRYPTED MESSAGE-----\n");
+
+		// encrypted AES key
+		formatted += ("-----BEGIN ENCRYPTED AES KEY-----\n");
+		formatted += (formatLongString(data[1]) + "\n");
+		formatted += ("-----END ENCRYPTED AES KEY-----\n");
+
+		// MAC
+		formatted += ("-----BEGIN MAC RESULT-----\n");
+		formatted += (formatLongString(data[2]) + "\n");
+		formatted += ("-----END MAC RESULT-----");
+
+		return formatted;
 	}
 
 	private static void sendMessage(Scanner sc, File publicKeysFolder, File privateKeysFolder,
@@ -253,10 +289,10 @@ public class SecureCommunicationSystem {
 		File receiversPublicKeyFile = new File(
 				publicKeysFolder.getAbsolutePath() + "\\" + receiversPublicKeyFileName + ".txt");
 
-		print("Your private key file: "); // private key of sender
-		String sendersPrivateKeyFileName = sc.nextLine();
-		File sendersPrivateKeyFile = new File(
-				privateKeysFolder.getAbsoluteFile() + "\\" + sendersPrivateKeyFileName + ".txt");
+//		print("Your private key file: "); // private key of sender
+//		String sendersPrivateKeyFileName = sc.nextLine();
+//		File sendersPrivateKeyFile = new File(
+//				privateKeysFolder.getAbsoluteFile() + "\\" + sendersPrivateKeyFileName + ".txt");
 
 		SecretKey aesKey = generateAESKey(); // generate AES key for message
 
@@ -266,38 +302,38 @@ public class SecureCommunicationSystem {
 																										// AES
 																										// key
 
-		String macResult = generateMAC(encryptedMessage, aesKey); // mac
+		String macResult = generateMAC(encryptedMessage, aesKey); // mac of encrypted message with AES key
 
 		// DEBUG STATEMENTS START
-		File sendersPublicKeyFile = new File(
-				publicKeysFolder.getAbsolutePath() + "\\" + sendersPrivateKeyFileName + ".txt");
-		File receiversPrivateKeyFile = new File(
-				privateKeysFolder.getAbsoluteFile() + "\\" + receiversPublicKeyFileName + ".txt");
-		print("Receiver's Public Key:  " + Files.readString(Paths.get(receiversPublicKeyFile.getAbsolutePath()))
-				+ "\n");
-		print("Receiver's Private Key: " + Files.readString(Paths.get(receiversPrivateKeyFile.getAbsolutePath()))
-				+ "\n");
-		print("Sneder's Public Key:    " + Files.readString(Paths.get(sendersPublicKeyFile.getAbsolutePath())) + "\n");
-		print("Sender's Private Key:   " + Files.readString(Paths.get(sendersPrivateKeyFile.getAbsolutePath()))
-				+ "\n\n");
-
-		print("Original Message:       " + messageString + "\n");
-		print("Encrypted Message:      " + encryptedMessage + "\n");
-		print("Decrypted Message:      " + (decryptAES(encryptedMessage, aesKey)) + "\n");
-		print("Decoded Message:        " + decodeBase64String(decryptAES(encryptedMessage, aesKey)) + "\n\n");
-		// decryptAES(encryptedMessage, aesKey).getBytes("UTF-8")
-
-		print("AES Key:                " + encode(aesKey.getEncoded()) + "\n");
-		print("Encrypted AES Key:      " + encryptedAesKey + "\n");
-		print("Decrypted AES Key:      " + decryptRSA(encryptedAesKey, receiversPrivateKeyFile, false) + "\n");
-		print("Decoded AES Key:        "
-				+ decodeBase64String(decryptRSA(encryptedAesKey, receiversPrivateKeyFile, false)) + "\n\n");
-		// decryptRSA(encryptedAesKey, receiversPrivateKeyFile, false)
-
-		SecretKey decryptedAesKey = stringToSecretKey(
-				decodeBase64String(decryptRSA(encryptedAesKey, receiversPrivateKeyFile, false)));
-		print("MAC Result:             " + generateMAC(encryptedMessage, aesKey) + "\n");
-		print("Verify MAC:             " + generateMAC(encryptedMessage, decryptedAesKey) + "\n\n");
+//		File sendersPublicKeyFile = new File(
+//				publicKeysFolder.getAbsolutePath() + "\\" + sendersPrivateKeyFileName + ".txt");
+//		File receiversPrivateKeyFile = new File(
+//				privateKeysFolder.getAbsoluteFile() + "\\" + receiversPublicKeyFileName + ".txt");
+//		print("Receiver's Public Key:  " + Files.readString(Paths.get(receiversPublicKeyFile.getAbsolutePath()))
+//				+ "\n");
+//		print("Receiver's Private Key: " + Files.readString(Paths.get(receiversPrivateKeyFile.getAbsolutePath()))
+//				+ "\n");
+//		print("Sneder's Public Key:    " + Files.readString(Paths.get(sendersPublicKeyFile.getAbsolutePath())) + "\n");
+//		print("Sender's Private Key:   " + Files.readString(Paths.get(sendersPrivateKeyFile.getAbsolutePath()))
+//				+ "\n\n");
+//
+//		print("Original Message:       " + messageString + "\n");
+//		print("Encrypted Message:      " + encryptedMessage + "\n");
+//		print("Decrypted Message:      " + (decryptAES(encryptedMessage, aesKey)) + "\n");
+//		print("Decoded Message:        " + decodeBase64String(decryptAES(encryptedMessage, aesKey)) + "\n\n");
+//		// decryptAES(encryptedMessage, aesKey).getBytes("UTF-8")
+//
+//		print("AES Key:                " + encode(aesKey.getEncoded()) + "\n");
+//		print("Encrypted AES Key:      " + encryptedAesKey + "\n");
+//		print("Decrypted AES Key:      " + decryptRSA(encryptedAesKey, receiversPrivateKeyFile, false) + "\n");
+//		print("Decoded AES Key:        "
+//				+ decodeBase64String(decryptRSA(encryptedAesKey, receiversPrivateKeyFile, false)) + "\n\n");
+//		// decryptRSA(encryptedAesKey, receiversPrivateKeyFile, false)
+//
+//		SecretKey decryptedAesKey = stringToSecretKey(
+//				decodeBase64String(decryptRSA(encryptedAesKey, receiversPrivateKeyFile, false)));
+//		print("MAC Result:             " + generateMAC(encryptedMessage, aesKey) + "\n");
+//		print("Verify MAC:             " + generateMAC(encryptedMessage, decryptedAesKey) + "\n\n");
 		// DEBUG STATEMENTS END
 
 		// display info to user
@@ -312,6 +348,12 @@ public class SecureCommunicationSystem {
 		print("-----BEGIN MAC RESULT-----\n");
 		print(formatLongString(macResult) + "\n");
 		print("-----END MAC RESULT-----\n");
+
+		FileWriter fileWriter = new FileWriter(transmittedData);
+		fileWriter.write(encryptedMessage + "\n" + encryptedAesKey + "\n" + macResult); // encrypted message, encrypted
+																						// AES key, and mac result
+																						// stored in file
+		fileWriter.close();
 	}
 
 	public static String secretKeyToString(SecretKey secretKey) throws NoSuchAlgorithmException {
@@ -353,46 +395,46 @@ public class SecureCommunicationSystem {
 	}
 
 	public static String encryptAES(String messageToEncrypt, SecretKey aesKey) throws Exception {
-		byte[] messageBytes = messageToEncrypt.getBytes();
+		byte[] messageBytes = messageToEncrypt.getBytes(); // bytes of message
 		encryptionCipher = Cipher.getInstance("AES/GCM/NoPadding");
 		encryptionCipher.init(Cipher.ENCRYPT_MODE, aesKey);
-		byte[] encryptedBytes = encryptionCipher.doFinal(messageBytes);
+		byte[] encryptedBytes = encryptionCipher.doFinal(messageBytes); // encrypts with AES
 		return encode(encryptedBytes);
 	}
 
 	public static String decryptAES(String cipherToDecrypt, SecretKey aesKey) throws Exception {
-		byte[] dataInBytes = decode(cipherToDecrypt);
+		byte[] dataInBytes = decode(cipherToDecrypt); // bytes of message
 		Cipher decryptionCipher = Cipher.getInstance("AES/GCM/NoPadding");
 		GCMParameterSpec spec = new GCMParameterSpec(128, encryptionCipher.getIV()); // first param is data length and
 																						// is 128 bits
 		decryptionCipher.init(Cipher.DECRYPT_MODE, aesKey, spec);
-		byte[] decryptedBytes = decryptionCipher.doFinal(dataInBytes);
+		byte[] decryptedBytes = decryptionCipher.doFinal(dataInBytes); // decrypts with AES
 		return encode(decryptedBytes);
 	}
 
 	private static String encryptRSA(String messageToEncrypt, File keyFile, boolean isPublicKey)
 			throws InvalidKeyException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException,
 			NoSuchPaddingException, InvalidKeySpecException, IOException {
-		Key key = loadKey(keyFile, isPublicKey, "RSA");
+		Key key = loadKey(keyFile, isPublicKey, "RSA"); // load the key
 		Cipher cipher = Cipher.getInstance("RSA");
 		cipher.init(Cipher.ENCRYPT_MODE, key);
-		byte[] bytes = cipher.doFinal(messageToEncrypt.getBytes(StandardCharsets.UTF_8));
+		byte[] bytes = cipher.doFinal(messageToEncrypt.getBytes(StandardCharsets.UTF_8)); // encrypts the message
 		return encode(bytes);
 	}
 
 	private static String decryptRSA(String cipherToDecrypt, File keyFile, boolean isPublicKey)
 			throws NoSuchAlgorithmException, InvalidKeySpecException, IOException, NoSuchPaddingException,
 			InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
-		Key key = loadKey(keyFile, isPublicKey, "RSA");
+		Key key = loadKey(keyFile, isPublicKey, "RSA"); // load the key
 		Cipher cipher = Cipher.getInstance("RSA");
 		cipher.init(Cipher.DECRYPT_MODE, key);
-		byte[] bytes = cipher.doFinal(Base64.getDecoder().decode(cipherToDecrypt));
+		byte[] bytes = cipher.doFinal(Base64.getDecoder().decode(cipherToDecrypt)); // decrypts the cipher
 		return encode(bytes);
 	}
 
 	private static Key loadKey(File keyFile, boolean isPublicKey, String algorithm)
 			throws IOException, NoSuchAlgorithmException, InvalidKeySpecException { // loads public or private key
-		byte[] keyBytes = decode(Files.readString(Paths.get(keyFile.getAbsolutePath())));
+		byte[] keyBytes = decode(Files.readString(Paths.get(keyFile.getAbsolutePath()))); // bytes of key
 		KeyFactory keyFactory = KeyFactory.getInstance(algorithm);
 		if (isPublicKey) {
 			EncodedKeySpec keySpec = new X509EncodedKeySpec(keyBytes);
