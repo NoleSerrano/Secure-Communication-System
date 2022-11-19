@@ -294,8 +294,10 @@ public class SecureCommunicationSystem {
 				+ decodeBase64String(decryptRSA(encryptedAesKey, receiversPrivateKeyFile, false)) + "\n\n");
 		// decryptRSA(encryptedAesKey, receiversPrivateKeyFile, false)
 
-		print("MAC Result:             " + macResult + "\n\n");
-		print("Verify MAC:             ");
+		SecretKey decryptedAesKey = stringToSecretKey(
+				decodeBase64String(decryptRSA(encryptedAesKey, receiversPrivateKeyFile, false)));
+		print("MAC Result:             " + generateMAC(encryptedMessage, aesKey) + "\n");
+		print("Verify MAC:             " + generateMAC(encryptedMessage, decryptedAesKey) + "\n\n");
 		// DEBUG STATEMENTS END
 
 		// display info to user
@@ -318,6 +320,12 @@ public class SecureCommunicationSystem {
 		return encodedKey;
 	}
 
+	public static SecretKey stringToSecretKey(String encodedKey) {
+		byte[] decodedKey = Base64.getDecoder().decode(encodedKey);
+		SecretKey originalKey = new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
+		return originalKey;
+	}
+
 	private static void readMessage(Scanner sc) {
 		print("File name: "); // message receiver wants to read
 		print("Your private key file"); // private key of receiver
@@ -333,15 +341,6 @@ public class SecureCommunicationSystem {
 		keyGen.init(128); // # of bits
 		SecretKey aesKey = keyGen.generateKey();
 		return aesKey;
-	}
-
-	// DEBUG
-	private static void showProviders() {
-		Provider[] providers = Security.getProviders();
-		for (int i = 0; i < providers.length; i++) {
-			print(providers[i] + " ");
-		}
-		print("\n\n");
 	}
 
 	private static String generateMAC(String messageString, SecretKey aesKey)
