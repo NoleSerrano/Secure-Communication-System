@@ -336,9 +336,16 @@ public class SecureCommunicationSystem {
 		print("File name: "); // message receiver wants to read
 		String fileName = sc.nextLine();
 		// gets the transmitted data content
-		String transmittedDataString = new String(
-				Files.readAllBytes(Paths.get(transmittedDataFolder.getAbsolutePath() + "\\" + fileName + ".txt")));
-		String[] data = transmittedDataString.split("\n");
+		String[] data;
+		if (fileName.contains("\"")) {
+			String transmittedDataString = new String(
+					Files.readAllBytes(Paths.get(fileName.substring(1, fileName.length() - 1))));
+			data = transmittedDataString.split("\n");
+		} else {
+			String transmittedDataString = new String(
+					Files.readAllBytes(Paths.get(transmittedDataFolder.getAbsolutePath() + "\\" + fileName + ".txt")));
+			data = transmittedDataString.split("\n");
+		}
 
 		print("Your private key file: "); // private key of receiver
 		String privateKeyFileName = sc.nextLine();
