@@ -37,6 +37,7 @@ import javax.crypto.spec.SecretKeySpec;
 // https://gustavopeiretti.com/rsa-encrypt-decrypt-java/
 // https://www.tutorialspoint.com/java_cryptography/java_cryptography_creating_mac.htm
 
+// Shift + Right Click file > Copy as path > "C:\Users\%USERNAME%\Documents\Secure Communication System\Private Keys\%FILENAME%.txt"
 public class SecureCommunicationSystem {
 
 	private static Base64.Encoder encoder = Base64.getEncoder(); // used for encoding the RSA key into text
@@ -280,14 +281,25 @@ public class SecureCommunicationSystem {
 				}
 			}
 		}
-		print("Message file: "); // sender's message
-		File messageFile = new File(sc.nextLine());
+		print("Message file: "); // sender's message (full path to file)
+		String messageFileName = sc.nextLine();
+		if (messageFileName.contains("\"")) { // copy as path
+			messageFileName = messageFileName.substring(1, messageFileName.length() - 1);
+		}
+		File messageFile = new File(messageFileName);
 		String messageString = Files.readString(Paths.get(messageFile.getAbsolutePath()));
 
 		print("Their public key file: "); // intended recipient's public key
 		String receiversPublicKeyFileName = sc.nextLine();
-		File receiversPublicKeyFile = new File(
-				publicKeysFolder.getAbsolutePath() + "\\" + receiversPublicKeyFileName + ".txt");
+		File receiversPublicKeyFile;
+		if (receiversPublicKeyFileName.contains("\"")) { // copy as path --> surrounds full path with quotes and quotes
+															// are disallowed in file names
+			receiversPublicKeyFile = new File(
+					receiversPublicKeyFileName.substring(1, receiversPublicKeyFileName.length() - 1));
+		} else {
+			receiversPublicKeyFile = new File(
+					publicKeysFolder.getAbsolutePath() + "\\" + receiversPublicKeyFileName + ".txt");
+		}
 
 		SecretKey aesKey = generateAESKey(); // generate AES key for message
 
@@ -330,7 +342,13 @@ public class SecureCommunicationSystem {
 
 		print("Your private key file: "); // private key of receiver
 		String privateKeyFileName = sc.nextLine();
-		File privateKeyFile = new File(privateKeysFolder.getAbsoluteFile() + "\\" + privateKeyFileName + ".txt");
+		File privateKeyFile;
+		if (privateKeyFileName.contains("\"")) { // copy as path --> surrounds full path with quotes and quotes are
+													// disallowed in file names
+			privateKeyFile = new File(privateKeyFileName.substring(1, privateKeyFileName.length() - 1));
+		} else {
+			privateKeyFile = new File(privateKeysFolder.getAbsoluteFile() + "\\" + privateKeyFileName + ".txt");
+		}
 
 		String encryptedMessage = data[0];
 		String encryptedAesKey = data[1];
